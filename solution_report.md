@@ -47,8 +47,16 @@ Entirely **structured** tabular data.
 
 # Input features
 
-Feature Category Specific FeaturesTransaction attributesAmount, currency, transaction type (debit/credit/wire/UPI), channel (ATM/online/branch)Temporal featuresTimestamp, day of week, hour of day, time since last transactionMerchant dataMerchant Category Code (MCC), merchant name, merchant countryGeolocationTransaction location vs. customer home location; distance from previous transactionCustomer profileAccount age, average monthly transaction volume, typical transaction size distributionDevice metadataDevice fingerprint, IP address, new device flagNetwork featuresCounterparty account age, counterparty transaction historyVelocity featuresTransactions per hour, amount per 24 hours, unique merchants per week
-
+| Feature Category      | Specific Features                                                                      |
+|-----------------------|----------------------------------------------------------------------------------------|
+| Transaction attributes | Amount, currency, type (debit / credit / wire / UPI), channel (ATM / online / branch) |
+| Temporal features      | Timestamp, day of week, hour of day, time since last transaction                      |
+| Merchant data          | Merchant Category Code (MCC), merchant name, merchant country                         |
+| Geolocation            | Transaction location vs. customer home; distance from previous transaction             |
+| Customer profile       | Account age, avg monthly volume, typical transaction size distribution                 |
+| Device metadata        | Device fingerprint, IP address, new device flag                                        |
+| Network features       | Counterparty account age, counterparty transaction history                             |
+| Velocity features      | Transactions per hour, amount per 24 hours, unique merchants per week                 |
 # Target variable or labels
 
 **Anomaly detection**: Reconstruction error (continuous) — no label required
@@ -64,7 +72,14 @@ Device and IP intelligence feeds (third-party enrichment)
 
 # Data quality risks
 
-RiskDescriptionMitigationSevere class imbalanceFraud is typically <0.5% of transactionsSMOTE, anomaly detection (unsupervised), asymmetric lossLabel delayFraud confirmed only weeks after investigationSemi-supervised learning; timestamp-aware training splitsData driftFraud patterns evolve continuouslyMonthly retraining; concept drift detection (PSI, KS test)Adversarial manipulationFraudsters study model behavior to evade detectionEnsemble models; model architecture confidentialityMissing dataCross-border transactions may have incomplete merchant or geolocation dataImputation strategies; robust feature engineering
+| Risk                    | Description                                                    | Mitigation                                                        |
+|-------------------------|----------------------------------------------------------------|-------------------------------------------------------------------|
+| Severe class imbalance  | Fraud is typically < 0.5% of all transactions                  | SMOTE, unsupervised anomaly detection, asymmetric loss            |
+| Label delay             | Fraud confirmed only weeks after analyst investigation         | Semi-supervised learning; timestamp-aware training splits         |
+| Data drift              | Fraud patterns evolve continuously across months               | Monthly retraining; concept drift detection (PSI, KS test)        |
+| Adversarial manipulation | Fraudsters study model behaviour to evade detection           | Ensemble models; model architecture confidentiality               |
+| Missing data            | Cross-border transactions may have incomplete geo / merchant data | Imputation strategies; robust feature engineering              |
+ 
 
 ## Task 5: Model Recommendation
 
@@ -127,14 +142,40 @@ Real-time Serving
 
 ## Task 6: Evaluation Plan
 
-# Technical metrics
-MetricTargetRationaleRecall (Fraud class)≥ 90%Primary objective: catch fraud before financial lossPrecision (Fraud class)≥ 80%Reduce false positives overwhelming analyst teamsFalse Positive Rate< 5% of all flagged transactionsAnalyst workload sustainabilityAUC-PR (Precision-Recall)≥ 0.85Preferred metric for severely imbalanced datasetsInference latency (p99)< 500msRegulatory and UX requirement for real-time card decisions
-Business metrics
-KPITargetFinancial fraud losses≥ 30% reduction in fraud-related lossesAnalyst investigation efficiency≥ 50% reduction in false positive review timeSAR filing compliance100% SAR filed within regulatory deadlineCustomer account freezes due to false positives≥ 40% reduction
-KPI baseline from reference data
-The business_kpi_sample.csv shows that in early 2025, error rates peaked at 11.16% (May) and manual processing hours averaged 500+ hours/month with resolution times of 32–45 hours. The AI solution should target a trajectory similar to the improvement observed in H2 2025 (error rate declining to 4–6%, resolution time to 20–25 hours), achieved systematically rather than through operational fluctuation.
+### Technical Metrics
+ 
+| Metric                    | Target                             |  Rationale         R.                                             |
+|---------------------------|------------------------------------|--------------------------------------------------------|
+| Recall (Fraud class)      | ≥ 90%                              | Primary objective: catch fraud before financial loss   |
+| Precision (Fraud class)   | ≥ 80%                              | Reduce false positives overwhelming analyst teams      |
+| False Positive Rate       | < 5% of all flagged transactions   | Analyst workload sustainability                        |
+| AUC-PR (Precision-Recall) | ≥ 0.85                             | Preferred metric for severely imbalanced datasets      |
+| Inference latency (p99)   | < 500ms                            | Regulatory and UX requirement for real-time decisions  |
 
-# Possible failure cases
+
+### Business Metrics
+ 
+| KPI                                        | Target                                         |
+|--------------------------------------------|------------------------------------------------|
+| Financial fraud losses                     | ≥ 30% reduction in fraud-related losses        |
+| Analyst investigation efficiency           | ≥ 50% reduction in false positive review time  |
+| SAR filing compliance                      | 100% SAR filed within regulatory deadline      |
+| Customer account freezes (false positives) | ≥ 40% reduction                                |
+
+
+### KPI Baseline from Reference Data
+ 
+From `business_kpi_sample.csv` — H1 2025 baseline:
+ 
+| Baseline Metric               | H1 2025 Value             | Post-deployment Target  |
+|-------------------------------|---------------------------|-------------------------|
+| Error rate (peak)             | 11.16% (May 2025)         | ≤ 4%                    |
+| Manual processing hours/month | ~500+ hours               | ≤ 250 hours             |
+| Average resolution time       | 32–45 hours               | ≤ 20–25 hours           |
+ 
+
+
+### Possible failure cases
 
 Novel coordinated fraud rings operating across multiple accounts simultaneously evade single-account anomaly models
 High-value legitimate transactions from VIP customers with unusual spending patterns repeatedly flagged
@@ -170,4 +211,11 @@ Mitigation: SHAP-based feature attribution for every flagged transaction; full d
 
 ## Task 8: Final Solution Summary
 
-CategoryDetailsProblemRule-based fraud detection produces >85% false positives, misses novel fraud patterns, and cannot scale with real-time transaction velocityProposed AI SolutionTwo-stage hybrid system: Autoencoder for unsupervised behavioral anomaly detection + FFNN classifier for fraud type categorization, with SHAP explainabilityRequired Data12 months of transaction records (labeled + unlabeled); customer profile data; device/IP metadata; historical confirmed fraud labels from case management systemModel RecommendationAutoencoder (anomaly detection) + FFNN ensemble (classification) with SHAP explanations and real-time Kafka serving pipelineExpected Business Impact≥30% reduction in fraud losses; ≥50% reduction in analyst false-positive workload; <500ms real-time inference; 100% SAR regulatory complianceKey RisksFalse positives blocking customers (mitigated by human-in-the-loop); adversarial evasion (mitigated by ensemble + red-teaming); demographic bias (mitigated by quarterly fairness audits)
+| Category                    | Details                                                                                                                                           |
+|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Problem**                 | Rule-based fraud detection produces >85% false positives, misses novel fraud patterns, and cannot scale with real-time transaction velocity        |
+| **Proposed AI Solution**    | Two-stage hybrid: Autoencoder for unsupervised behavioural anomaly detection + FFNN classifier for fraud type categorisation with SHAP explainability |
+| **Required Data**           | 12 months of transaction records (labeled + unlabeled); customer profile data; device/IP metadata; historical confirmed fraud labels               |
+| **Model Recommendation**    | Autoencoder + FFNN ensemble with SHAP explanations and real-time Kafka serving pipeline (< 500ms inference)                                       |
+| **Expected Business Impact**| ≥ 30% fraud loss reduction; ≥ 50% analyst false-positive workload reduction; < 500ms real-time inference; 100% SAR regulatory compliance          |
+| **Key Risks & Mitigation**  | False positives → human-in-the-loop; adversarial evasion → ensemble + red-teaming; demographic bias → quarterly fairness audits                   |
